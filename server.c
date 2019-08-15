@@ -70,6 +70,11 @@ int main(int argc, const char * argv[]) {
 
 void manage_request(int socket_file_descriptor) {
     char *message;
+    message = calloc(1024, sizeof(char)); // please add  free
+    if (message == NULL){
+        perror("Could not allocate memory");
+        exit(1);
+    }
     hello_message request;
     measurement_message measurement;
     char output_message[100];

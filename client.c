@@ -2,13 +2,14 @@
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include "myfunction.h"
 
-int main(int argc, char *argv[]){
+int main(int argc, char *argv[]) {
     struct sockaddr_in server_addr; // struct containing server address information
     struct sockaddr_in client_addr; // struct containing client address information
     int sfd; // Server socket filed descriptor
@@ -18,7 +19,7 @@ int main(int argc, char *argv[]){
     ssize_t byteSent; // Number of bytes sent
     size_t msgLen;
     char receivedData [1024]; // Data to be received
-    char sendData [1024]; // Data to be sent 
+    char sendData [1024]; // Data to be sent
 
     if (argc != 3) {
     printf("\nErrore numero errato di parametri\n");
@@ -39,7 +40,7 @@ int main(int argc, char *argv[]){
 
     cr = connect(sfd, (struct sockaddr *) &server_addr, sizeof(server_addr));
 
-    if (cr < 0){
+    if (cr == -1) {
         perror("connect operation failed");
         exit(EXIT_FAILURE);
     }
@@ -47,7 +48,8 @@ int main(int argc, char *argv[]){
 
     while(!stop){
         printf("Insert message:\n");
-        scanf("%s", sendData);
+        scanf("%[^\n]", sendData);
+        getchar();
         printf("String going to be sent to server: %s\n", sendData);
 
         if(strcmp(sendData, "exit") == 0){
@@ -65,6 +67,8 @@ int main(int argc, char *argv[]){
             printData(receivedData, byteRecv);
         }	
     }
+
+    close(sfd);
 
     return 0;
 }

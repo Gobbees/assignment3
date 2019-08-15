@@ -2,10 +2,11 @@
  * 
  */
 typedef struct {
-    char *measure_type;
+    char measure_type[6];
     int n_probes;
     int msg_size;
     int server_delay;
+    int probes_counted;
 } hello_message;
 
 /**

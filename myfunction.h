@@ -21,10 +21,11 @@ size_t countStrLen(char *str){
 }
 
 void printData(char *str, size_t numBytes){
-	for(int i = 0; i < numBytes; i++){
-		printf("%c", str[i]);
-	}
-	printf("\n");
+	int counter = 0;
+  while(str[counter] != '\0') {
+    printf("%c", str[counter++]);
+  }
+  printf("\n");
 }
 
 void convertToUpperCase(char *str, size_t numBytes){

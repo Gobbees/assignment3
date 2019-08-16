@@ -36,6 +36,7 @@ int parse_hello_message(char *buffer, hello_message *message) {
 
 int parse_and_check_measurement_message(char *buffer, hello_message request, measurement_message *message) {
     strtok(buffer, " "); //skips the protocol_phase. Not interesting here.
+
     int probe_seq_num = atoi(strtok(NULL, " "));
     if(probe_seq_num < 1) {
         fprintf(stderr, "Invalid input message: probe_seq_num must be a positive non-zero number");
@@ -46,15 +47,21 @@ int parse_and_check_measurement_message(char *buffer, hello_message request, mea
     } else if(probe_seq_num != request.probes_counted + 1) {
         fprintf(stderr, "Invalid input message: probe_seq_num must be exactly the next probe: expected %d, actual %d", request.probes_counted + 1, probe_seq_num);
         return 1;
-    }
+    }   
+
     char *payload = strtok(NULL, " ");
+    printf("%s %lu", payload, strlen(payload)); fflush(stdout);
     message->probe_seq_num = probe_seq_num;
     if(strlen(payload) != request.msg_size) {
         fprintf(stderr, "Invalid input message: payload size must be exactly the specified msg_size: %lu, %d", strlen(payload), request.msg_size);
         return 1;
     }
+    message->payload = (char *) malloc(request.msg_size);
+    if(message->payload == NULL) {
+        fprintf(stderr, "Malloc returned NULL");
+        return 2;
+    }
     strcpy(message->payload, payload);
-    
-    
+
     return 0;
 }

@@ -8,6 +8,7 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include "check_phase.h"
+#include "message_sizes.h"
 
 #define ff fflush(stdout);
 
@@ -19,7 +20,7 @@ int main(int argc, const char * argv[]) {
     ssize_t byteRecv;
     struct sockaddr_in client_addr; // struct containing client address information
     int sfd;
-    char receivedData [1024]; // Data to be received
+    char receivedData [MAX_MESSAGE_SIZE]; // Data to be received
 
     if (argc != 3) {
 		printf("Wrong parameter count:\n");
@@ -57,10 +58,12 @@ int main(int argc, const char * argv[]) {
             fprintf(stderr, "Cannot fork");
             exit(1);
         } else if(pid == 0) {
+            printf("Child process created.\n");
             close(sfd);
             manage_request(opened_sfd);
             exit(0);
         } else {
+            printf("Created process %d\n", pid);
             close(opened_sfd);
         }
     }
@@ -70,7 +73,7 @@ int main(int argc, const char * argv[]) {
 
 void manage_request(int socket_file_descriptor) {
     char *message;
-    message = calloc(1024, sizeof(char)); // please add  free
+    message = (char *) malloc(MAX_MESSAGE_SIZE); // please add free
     if (message == NULL){
         perror("Could not allocate memory");
         exit(1);
@@ -79,7 +82,8 @@ void manage_request(int socket_file_descriptor) {
     measurement_message measurement;
     char output_message[100];
     while(1) {
-        int message_length = recv(socket_file_descriptor, message, 1024, 0);
+        memset(message, 0, MAX_MESSAGE_SIZE);
+        int message_length = recv(socket_file_descriptor, message, MAX_MESSAGE_SIZE, 0);
         if(message_length == -1) {
             perror("recvfrom");
             exit(EXIT_FAILURE);
@@ -100,13 +104,17 @@ void manage_request(int socket_file_descriptor) {
                 close(socket_file_descriptor);
                 exit(1);
             }
+
             int parse_and_check_measurement_message_return_value = parse_and_check_measurement_message(message, request, &measurement);
             if(parse_and_check_measurement_message_return_value == 1) {
                 strcpy(output_message, "404 ERROR - Invalid Measurement message");
                 send(socket_file_descriptor, output_message, 100, 0);
                 close(socket_file_descriptor);
                 exit(1);
+                printf("ciaociao\n"); ff;
             } else {
+                
+                // printf("ciaociao\n"); ff;
                 request.probes_counted++;
                 strcpy(output_message, measurement.payload);
                 send(socket_file_descriptor, output_message, 100, 0);

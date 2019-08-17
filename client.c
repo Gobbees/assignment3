@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
     if(mode == RTT) {
         execute_rtt(argv[1], argv[2]);   
     } else if(mode == THROUGHPUT) {
-    
+        execute_throughput(argv[1], argv[2]);
     } else { 
         fprintf(stderr, "Invalid mode");
         exit(1);

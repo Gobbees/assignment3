@@ -56,10 +56,18 @@ int parse_and_check_measurement_message(char *buffer, hello_message request, mea
         fprintf(stderr, "Invalid input message: payload size must be exactly the specified msg_size: %lu, %d", strlen(payload), request.msg_size);
         return 1;
     }
-    message->payload = (char *) malloc(request.msg_size);
     if(message->payload == NULL) {
-        fprintf(stderr, "Malloc returned NULL");
-        return 2;
+        message->payload = (char *) malloc(request.msg_size);
+        if(message->payload == NULL) {
+            fprintf(stderr, "Malloc returned NULL");
+            return 2;
+        }
+    } else {
+        message->payload = (char *) realloc(message->payload, request.msg_size);
+        if(message->payload == NULL) {
+            fprintf(stderr, "Realloc returned NULL");
+            return 2;
+        }
     }
     strcpy(message->payload, payload);
 

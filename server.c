@@ -115,14 +115,7 @@ void manage_request(int socket_file_descriptor) {
                 exit(1);
             } else {
                 request.probes_counted++;
-                printf("Payload\n%s\n", measurement.payload);
-                output_message = (char *) malloc(strlen(measurement.payload));
-                if(output_message == NULL) {
-                    printf("ciao\n");
-                    exit(1);
-                }
-                strcpy(output_message, measurement.payload);
-                send(socket_file_descriptor, output_message, strlen(output_message), 0);
+                send(socket_file_descriptor, measurement.payload, strlen(measurement.payload), 0);
             }
         } else if(is_bye_phase(message, message_length)) {
             output_message = "200 OK - Closing";

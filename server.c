@@ -73,7 +73,7 @@ int main(int argc, const char * argv[]) {
 }
 
 void manage_request(int socket_file_descriptor) {
-    char *message;
+    char *message = NULL;
     message = (char *) malloc(MAX_MESSAGE_SIZE); // please add free
     if (message == NULL){
         perror("Could not allocate memory");
@@ -81,6 +81,7 @@ void manage_request(int socket_file_descriptor) {
     }
     hello_message request;
     measurement_message measurement;
+    measurement.payload = NULL;
     char *output_message;
     while(1) {
         message = memset(message, 0, MAX_MESSAGE_SIZE);

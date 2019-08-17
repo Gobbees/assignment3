@@ -143,7 +143,7 @@ int execute_throughput(char *ip_address, char *port) {
 }
 
 char * get_string_by_length(int length) {
-    char *string;
+    char *string = NULL;
     string = (char *) malloc(length);
     if(string == NULL) {
         fprintf(stderr, "Malloc returned NULL");

@@ -15,7 +15,7 @@ check_phase.o: check_phase.c check_phase.h
 parse_message.o: parse_message.c parse_message.h
 	gcc -c parse_message.c
 
-client_executor.o: client_executor.c client_executor.h
+client_executor.o: client_executor.c client_executor.h myfunction.h
 	gcc -c client_executor.c
 
 client.o: client.c myfunction.h client_executor.h

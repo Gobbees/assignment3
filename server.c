@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include "check_phase.h"
 #include "message_sizes.h"
+#include "myfunction.h"
 
 #define ff fflush(stdout);
 
@@ -80,10 +81,12 @@ void manage_request(int socket_file_descriptor) {
     }
     hello_message request;
     measurement_message measurement;
-    char output_message[100];
+    char *output_message;
     while(1) {
-        memset(message, 0, MAX_MESSAGE_SIZE);
-        int message_length = recv(socket_file_descriptor, message, MAX_MESSAGE_SIZE, 0);
+        message = memset(message, 0, MAX_MESSAGE_SIZE);
+        printf("Waiting for messages...\n"); ff;
+        ssize_t message_length = recv(socket_file_descriptor, message, MAX_MESSAGE_SIZE, 0);
+        printf("Message received: %s\n", message); ff;
         if(message_length == -1) {
             perror("recvfrom");
             exit(EXIT_FAILURE);
@@ -91,41 +94,44 @@ void manage_request(int socket_file_descriptor) {
         if(is_hello_phase(message, message_length)) {
             int parse_hello_message_return_value = parse_hello_message(message, &request);
             if(parse_hello_message_return_value == 1) {
-                strcpy(output_message, "404 ERROR - Invalid Hello message");
+                output_message = "404 ERROR - Invalid Hello message";
                 send(socket_file_descriptor, output_message, 100, 0);
             } else {
-                strcpy(output_message, "200 OK - Ready");
+                output_message = "200 OK - Ready";
                 send(socket_file_descriptor, output_message, 100, 0);
             }
         } else if(is_measurement_phase(message, message_length)) {
             if(is_request_uninitialized(request)) {
-                strcpy(output_message, "404 ERROR - Invalid Measurement message");
-                send(socket_file_descriptor, output_message, 100, 0);
+                output_message = "404 ERROR - Invalid Measurement message";
+                send(socket_file_descriptor, output_message, strlen(output_message), 0);
                 close(socket_file_descriptor);
                 exit(1);
             }
-
             int parse_and_check_measurement_message_return_value = parse_and_check_measurement_message(message, request, &measurement);
             if(parse_and_check_measurement_message_return_value == 1) {
-                strcpy(output_message, "404 ERROR - Invalid Measurement message");
+                output_message = "404 ERROR - Invalid Measurement message";
                 send(socket_file_descriptor, output_message, 100, 0);
                 close(socket_file_descriptor);
                 exit(1);
-                printf("ciaociao\n"); ff;
             } else {
-                
-                // printf("ciaociao\n"); ff;
                 request.probes_counted++;
+                printf("Payload\n%s\n", measurement.payload);
+                output_message = (char *) malloc(strlen(measurement.payload));
+                if(output_message == NULL) {
+                    printf("ciao\n");
+                    exit(1);
+                }
                 strcpy(output_message, measurement.payload);
-                send(socket_file_descriptor, output_message, 100, 0);
+                send(socket_file_descriptor, output_message, strlen(output_message), 0);
             }
         } else if(is_bye_phase(message, message_length)) {
-            strcpy(output_message, "200 OK - Closing");
+            output_message = "200 OK - Closing";
             send(socket_file_descriptor, output_message, 100, 0);
             close(socket_file_descriptor);
             exit(1);
         } else {
-            strcpy(output_message, "404 ERROR - No operation found");
+            printf("Error"); ff;
+            output_message = "404 ERROR - No operation found";
             send(socket_file_descriptor, output_message, 100, 0);
             close(socket_file_descriptor);
             exit(1);

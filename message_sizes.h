@@ -1,0 +1,1 @@
+#define MAX_MESSAGE_SIZE 32800

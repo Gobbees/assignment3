@@ -7,7 +7,6 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
-#include "myfunction.h"
 #include "message_sizes.h"
 #include "client_executor.h"
 

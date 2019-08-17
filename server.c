@@ -87,7 +87,6 @@ void manage_request(int socket_file_descriptor) {
         message = memset(message, 0, MAX_MESSAGE_SIZE);
         printf("Waiting for messages...\n"); ff;
         ssize_t message_length = recv(socket_file_descriptor, message, MAX_MESSAGE_SIZE, 0);
-        printf("Message received: %s\n", message); ff;
         if(message_length == -1) {
             perror("recvfrom");
             exit(EXIT_FAILURE);

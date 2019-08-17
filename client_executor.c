@@ -83,7 +83,7 @@ int execute_throughput(char *ip_address, char *port) {
 
     double rtts[100];
     
-    char data[32768];
+    char data[33000];
     int measurements[5] = {1024, 2048, 4096, 16384, 32768};
     struct timespec start, stop;
     
@@ -113,12 +113,11 @@ int execute_throughput(char *ip_address, char *port) {
         int size = measurements[i];
         for(int j = 1; j <= 20; j++) {
             sprintf(data, "m %d %.*s", j, size, string);
-            printf("%s\n", data); ff;
-            printf("String of length %d going to be sent to server.\n", size); fflush(stdout);
+            printf("String of length %d going to be sent to server. Data lenght: %lu\n", size, strlen(data)); fflush(stdout);
 
             clock_gettime(CLOCK_REALTIME, &start);
             send(sfd, data, strlen(data), 0);
-            ssize_t byteRecv = recv(sfd, data, 32768, 0);
+            ssize_t byteRecv = recv(sfd, data, strlen(data), 0);
             clock_gettime(CLOCK_REALTIME, &stop);
             printf("%d %zd \n", size, byteRecv); ff;
             if((int) byteRecv != size) {

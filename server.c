@@ -9,9 +9,7 @@
 #include <unistd.h>
 #include "check_phase.h"
 #include "message_sizes.h"
-#include "myfunction.h"
-
-#define ff fflush(stdout);
+#include "utilities.h"
 
 void manage_request(int socket_file_descriptor);
 
@@ -28,7 +26,7 @@ int main(int argc, const char * argv[]) {
 		printf("%s <server IP (dotted notation)> <server port>\n", argv[0]);
 		exit(1);
     }
-    sfd = socket(AF_INET, SOCK_STREAM, 0);
+    sfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   
     if (sfd < 0){
         perror("socket opening failed"); // Print error message
@@ -87,6 +85,7 @@ void manage_request(int socket_file_descriptor) {
         message = memset(message, 0, MAX_MESSAGE_SIZE);
         printf("Waiting for messages...\n"); ff;
         ssize_t message_length = recv(socket_file_descriptor, message, MAX_MESSAGE_SIZE, 0);
+        print_string(message, message_length); ff;
         if(message_length == -1) {
             perror("recvfrom");
             exit(EXIT_FAILURE);

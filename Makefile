@@ -9,7 +9,7 @@ client.exe: client.o utilities.o
 utilities.o: utilities.c
 	gcc -c utilities.c
 
-server.o: server.c check_phase.h parse_message.h myfunction.h message_sizes.h
+server.o: server.c
 	gcc -c server.c
 
 check_phase.o: check_phase.c check_phase.h

@@ -47,7 +47,7 @@ int parse_and_check_measurement_message(char *buffer, hello_message request, mea
     } else if(probe_seq_num != request.probes_counted + 1) {
         fprintf(stderr, "Invalid input message: probe_seq_num must be exactly the next probe: expected %d, actual %d", request.probes_counted + 1, probe_seq_num);
         return 1;
-    }   
+    }
 
     char *payload = strtok(NULL, " ");
     printf("%s %lu", payload, strlen(payload)); fflush(stdout);

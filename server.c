@@ -11,6 +11,8 @@
 #include "message_sizes.h"
 #include "utilities.h"
 
+#define MAX_MESSAGE_SIZE 33000
+
 void manage_request(int socket_file_descriptor);
 
 int main(int argc, const char * argv[]) {
@@ -85,7 +87,7 @@ void manage_request(int socket_file_descriptor) {
         message = memset(message, 0, MAX_MESSAGE_SIZE);
         printf("Waiting for messages...\n"); ff;
         ssize_t message_length = recv(socket_file_descriptor, message, MAX_MESSAGE_SIZE, 0);
-        print_string(message, message_length); ff;
+        print_string(stdout, message); ff;
         if(message_length == -1) {
             perror("recvfrom");
             exit(EXIT_FAILURE);

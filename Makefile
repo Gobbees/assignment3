@@ -3,8 +3,8 @@ all: server.exe client.exe
 server.exe: server.o check_phase.o parse_message.o utilities.o
 	gcc -o server.exe server.o check_phase.o parse_message.o utilities.o
 
-client.exe: client.o utilities.o client_executor.o
-	gcc -o client.exe client.o utilities.o client_executor.o
+client.exe: client.o utilities.o
+	gcc -o client.exe client.o utilities.o
 
 utilities.o: utilities.c
 	gcc -c utilities.c
@@ -20,9 +20,6 @@ parse_message.o: parse_message.c parse_message.h
 
 client.o: client.c
 	gcc -c client.c
-
-client_executor.o: client_executor.c client_executor.h
-	gcc -c client_executor.c
 
 .PHONY: clean
 

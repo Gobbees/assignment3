@@ -1,11 +1,12 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include "utilities.h"
 
-void print_string(char *string, ssize_t string_length) {
+void print_string(FILE *file, char *string) {
     int counter = 0;
     while(string[counter] != '\0') {
-        printf("%c", string[counter++]);
+        fprintf(file, "%c", string[counter++]);
     }
     printf("\n");
 }
@@ -18,4 +19,11 @@ int max_array(int array[], int array_length) {
         }
     }
     return max;
+}
+
+void check_allocation(void * pointer) {
+    if(pointer == NULL) {
+        fprintf(stderr, "There was a problem allocating memory.\n"); ff;
+        exit(1);
+    }
 }

@@ -101,6 +101,7 @@ void manage_request(int socket_file_descriptor) {
             }
         } else if(is_measurement_phase(message, message_length)) {
             if(is_request_uninitialized(request)) {
+                printf("Invalid measurement: request uninitialized.\n"); ff;
                 output_message = "404 ERROR - Invalid Measurement message";
                 send(socket_file_descriptor, output_message, strlen(output_message), 0);
                 close(socket_file_descriptor);
@@ -108,6 +109,7 @@ void manage_request(int socket_file_descriptor) {
             }
             int parse_and_check_measurement_message_return_value = parse_and_check_measurement_message(message, request, &measurement);
             if(parse_and_check_measurement_message_return_value == 1) {
+                printf("Invalid measurement: invalid request.\n"); ff;
                 output_message = "404 ERROR - Invalid Measurement message";
                 send(socket_file_descriptor, output_message, 100, 0);
                 close(socket_file_descriptor);

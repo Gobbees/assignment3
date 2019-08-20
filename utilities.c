@@ -27,3 +27,13 @@ void check_allocation(void * pointer) {
         exit(1);
     }
 }
+
+
+void log_on_file(int packet_size, int rtt, char path[]){
+    FILE * write_file = fopen(path, "a");
+    if (write_file == NULL){
+        fprintf(stderr, "There was a problem opening the file.\n");
+    }
+    fprintf(write_file, "%d %d\n", packet_size, rtt);
+    fclose(write_file);
+}

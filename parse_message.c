@@ -50,7 +50,6 @@ int parse_and_check_measurement_message(char *buffer, hello_message request, mea
     }
 
     char *payload = strtok(NULL, " ");
-    printf("%s %lu", payload, strlen(payload)); fflush(stdout);
     message->probe_seq_num = probe_seq_num;
     if(strlen(payload) != request.msg_size) {
         fprintf(stderr, "Invalid input message: payload size must be exactly the specified msg_size: expected %d, actual %lu", request.msg_size, strlen(payload));

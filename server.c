@@ -8,7 +8,6 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include "check_phase.h"
-#include "message_sizes.h"
 #include "utilities.h"
 
 #define MAX_MESSAGE_SIZE 33000
@@ -54,6 +53,7 @@ int main(int argc, const char * argv[]) {
     socklen_t size = sizeof(client_addr);
     while(1) {
         int opened_sfd = accept(sfd, (struct sockaddr *) &client_addr, &size);
+        printf("Accepted Client: IP Address %u and port %d", client_addr.sin_addr.s_addr, client_addr.sin_port);
         int pid = fork();
         if(pid < 0) {
             fprintf(stderr, "Cannot fork");
@@ -117,6 +117,7 @@ void manage_request(int socket_file_descriptor) {
                 close(socket_file_descriptor);
                 exit(1);
             } else {
+                sleep(request.server_delay);
                 request.probes_counted++;
                 send(socket_file_descriptor, measurement.payload, strlen(measurement.payload), 0);
             }

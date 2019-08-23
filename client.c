@@ -3,11 +3,13 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <unistd.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <time.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include "utilities.h"
 
 #define RTT 1
@@ -16,7 +18,7 @@
 /**
  * 
  */
-int execute_request(int operation, int sizes[], int sizes_length, int n_measurements_for_size);
+int execute_request(int operation, int sizes[], int sizes_length, int n_measurements_for_size, int server_delay);
 /**
  * 
  */
@@ -24,7 +26,7 @@ char * get_string_by_length(int length);
 /**
  * 
  */
-double get_measurement_by_operation(int operation, int size, struct timespec start, struct timespec end);
+double get_average_by_operation(int operation, long rtts[], int start, int end, int sizes[], int n_measurements_for_size);
 /**
  * 
  */
@@ -45,14 +47,18 @@ int main(int argc, char *argv[]) {
     int mode;
     printf("Select the operation you want to perform:\n- 1: rtt measurement\n- 2: throughput measurement\n");
     scanf("%d", &mode);
+    int server_delay;
+    printf("Insert the server delay: ");
+    scanf("%d", &server_delay);
+
     if(mode == RTT) {
         int sizes[6] = {1, 100, 200, 400, 800, 1000};
         int n_measurements_for_size = 20;
-        execute_request(RTT, sizes, 6, n_measurements_for_size);
+        execute_request(RTT, sizes, 6, n_measurements_for_size, server_delay);
     } else if(mode == THROUGHPUT) {
         int sizes[5] = {1000, 2000, 4000, 16000, 32000};
         int n_measurements_for_size = 20;
-        execute_request(THROUGHPUT, sizes, 5, n_measurements_for_size);
+        execute_request(THROUGHPUT, sizes, 5, n_measurements_for_size, server_delay);
     } else { 
         fprintf(stderr, "Invalid mode");
         return 1;
@@ -60,10 +66,10 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-int execute_request(int operation, int sizes[], int sizes_length, int n_measurements_for_size) {
+int execute_request(int operation, int sizes[], int sizes_length, int n_measurements_for_size, int server_delay) {
 
     int number_of_measurements = n_measurements_for_size * sizes_length;
-    double measurements[number_of_measurements]; //TODO fix rtt double precision problem
+    long rtts[number_of_measurements];
 
     char *hello_operation = NULL;
     if(operation == RTT) {
@@ -76,6 +82,7 @@ int execute_request(int operation, int sizes[], int sizes_length, int n_measurem
     char send_buffer[max_size];
     struct timespec start, end;
     ssize_t recv_message_size;
+    struct tcp_connection_info info;
     
     char *string = get_string_by_length(max_size);
     for(int i = 0; i < sizes_length; i++) {
@@ -96,7 +103,7 @@ int execute_request(int operation, int sizes[], int sizes_length, int n_measurem
         }
         
         //Hello phase
-        sprintf(send_buffer, "h %s %d %d 0", hello_operation, n_measurements_for_size, sizes[i]);
+        sprintf(send_buffer, "h %s %d %d %d", hello_operation, n_measurements_for_size, sizes[i], server_delay);
         send(sfd, send_buffer, strlen(send_buffer), 0);
         recv_message_size = recv(sfd, rcv_buffer, max_size, 0);
         if(recv_message_size == -1 || strcmp(rcv_buffer, "200 OK - Ready") != 0) {
@@ -107,26 +114,46 @@ int execute_request(int operation, int sizes[], int sizes_length, int n_measurem
         int size = sizes[i];
         for(int j = 1; j <= n_measurements_for_size; j++) {
             sprintf(send_buffer, "m %d %.*s", j, size, string);
-            clock_gettime(CLOCK_REALTIME, &start);
+            clock_gettime(CLOCK_MONOTONIC, &start);
             send(sfd, send_buffer, strlen(send_buffer), 0);
             recv_message_size = recv(sfd, rcv_buffer, max_size, 0);
-            clock_gettime(CLOCK_REALTIME, &end);
+            clock_gettime(CLOCK_MONOTONIC, &end);
             if(recv_message_size != size) {
                 fprintf(stderr,"Error: recv returned wrong string: "); ff;
                 print_string(stderr, rcv_buffer);
                 exit(1);
             }
-            
-            measurements[i * j + j] = get_measurement_by_operation(operation, size, start, end);
+            getsockopt(sfd, IPPROTO_TCP, TCP_CONNECTION_INFO, (void *) &info, (socklen_t *) sizeof(info));
+            rtts[i * j + j] = info.tcpi_srtt;
+            printf("Measured RTT for message of size %d: %ld ms.\n", size, rtts[i * j + j]);
         }
+        printf("Average RTT for message of size %d: %lf\n", size, get_average_by_operation(operation, rtts, i * n_measurements_for_size, (i + 1) * n_measurements_for_size, sizes, n_measurements_for_size));
         sprintf(send_buffer, "b");
         send(sfd, send_buffer, max_size, 0);
         close(sfd);
     }
-
-    print_average_by_operation(operation, measurements, number_of_measurements);
     
     return 0;
+}
+
+double get_average_by_operation(int operation, long rtts[], int start, int end, int sizes[], int n_measurements_for_size) {
+    if(operation == RTT) {
+        long total_rtts = 0;
+        for(int i = start; i < end; i++) {
+            total_rtts += rtts[i];
+        }
+        return ((double) total_rtts / (end - start)) / 1E6;
+    } else if(operation == THROUGHPUT) {
+        double total_throughputs = 0;
+        for(int i = start; i < end; i++) {
+            int size = sizes[i / n_measurements_for_size];
+            total_throughputs += (double) (size * 1E3) / (rtts[i] / 1E9);
+        }
+        return (double) total_throughputs / (end - start);
+    } else {
+        fprintf(stderr, "Unsupported operation.");
+        exit(1);
+    }
 }
 
 char * get_string_by_length(int length) {
@@ -157,7 +184,7 @@ double get_measurement_by_operation(int operation, int size, struct timespec sta
 void print_average_by_operation(int operation, double measurements[], int measurements_size) {
     long total = 0;
     for(int i=0; i < measurements_size; i++) {
-            total += measurements[i];
+        total += measurements[i];
     }
     double average = (double) total / measurements_size;
     if(operation == RTT) {

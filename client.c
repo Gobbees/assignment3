@@ -32,6 +32,14 @@ double get_average_by_operation(int operation, long rtts[], int start, int end, 
  */
 void print_average_by_operation(int operation, double measurements[], int measurements_size);
 
+/**
+ * 
+ */
+double timedifference_msec(struct timeval t0, struct timeval t1)
+{
+    return (t1.tv_sec - t0.tv_sec) * 1000.0f + (t1.tv_usec - t0.tv_usec) / 1000.0f;
+}
+
 char *ip_address;
 char *port;
 
@@ -80,11 +88,11 @@ int execute_request(int operation, int sizes[], int sizes_length, int n_measurem
     int max_size = max_array(sizes, sizes_length) + 100;
     char rcv_buffer[max_size];
     char send_buffer[max_size];
-    struct timespec start, end;
+    struct timeval start, end;
     ssize_t recv_message_size;
-    struct tcp_connection_info info;
     
     char *string = get_string_by_length(max_size);
+
     for(int i = 0; i < sizes_length; i++) {
         int sfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
         if (sfd < 0){
@@ -112,22 +120,23 @@ int execute_request(int operation, int sizes[], int sizes_length, int n_measurem
         }
 
         int size = sizes[i];
+        //Measurement phase
         for(int j = 1; j <= n_measurements_for_size; j++) {
             sprintf(send_buffer, "m %d %.*s", j, size, string);
-            clock_gettime(CLOCK_MONOTONIC, &start);
+            gettimeofday(&start, NULL);
             send(sfd, send_buffer, strlen(send_buffer), 0);
             recv_message_size = recv(sfd, rcv_buffer, max_size, 0);
-            clock_gettime(CLOCK_MONOTONIC, &end);
+            gettimeofday(&end, NULL);
             if(recv_message_size != size) {
                 fprintf(stderr,"Error: recv returned wrong string: "); ff;
                 print_string(stderr, rcv_buffer);
                 exit(1);
             }
-            getsockopt(sfd, IPPROTO_TCP, TCP_CONNECTION_INFO, (void *) &info, (socklen_t *) sizeof(info));
-            rtts[i * j + j] = info.tcpi_srtt;
+            rtts[i * j + j] = timedifference_msec(start, end)   ;
             printf("Measured RTT for message of size %d: %ld ms.\n", size, rtts[i * j + j]);
         }
         printf("Average RTT for message of size %d: %lf\n", size, get_average_by_operation(operation, rtts, i * n_measurements_for_size, (i + 1) * n_measurements_for_size, sizes, n_measurements_for_size));
+        //Bye phase
         sprintf(send_buffer, "b");
         send(sfd, send_buffer, max_size, 0);
         close(sfd);

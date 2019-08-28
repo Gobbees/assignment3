@@ -117,6 +117,16 @@ void manage_request(int socket_file_descriptor) {
                 close(socket_file_descriptor);
                 exit(1);
             } else {
+                while(strlen(measurement.payload) != request.msg_size) {
+                    ssize_t message_length = recv(socket_file_descriptor, message, MAX_MESSAGE_SIZE, 0);
+                    char *new_payload;
+                    new_payload = malloc(strlen(measurement.payload) + message_length + 1);
+                    check_allocation(new_payload);
+                    new_payload[0] = '\0';  // ensures the memory is an empty string
+                    strcat(new_payload, measurement.payload);
+                    strcat(new_payload, message);
+                    measurement.payload = new_payload;
+                }
                 sleep(request.server_delay);
                 request.probes_counted++;
                 send(socket_file_descriptor, measurement.payload, strlen(measurement.payload), 0);

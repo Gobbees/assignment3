@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "parse_message.h"
-#include "utilities.h"
+#include "../common/utilities.h"
 
 int parse_hello_message(char *buffer, hello_message *message) {
     strtok(buffer, " "); //skips the protocol_phase. Not interesting here.

@@ -10,7 +10,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
-#include "utilities.h"
+#include "../common/utilities.h"
 
 #define RTT 1
 #define THROUGHPUT 2
@@ -83,6 +83,28 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Invalid mode");
         return 1;
     }
+
+    int sizes[100];
+    int n_sizes = 0;
+    int new_size = 0;
+    while(1) {
+        printf("Add a size to the measurement (-1 to exit size input): ");
+        scanf("%d", &new_size);
+        if(new_size == -1) {
+            break;
+        } else if(new_size < 0) {
+            fprintf(stderr, "Invalid size: it must be a positive number");
+        }
+        sizes[n_sizes++] = new_size;
+    }
+
+    int n_measurements_for_size;
+    printf("Insert the number of measurement for each size: ");
+    scanf("%d", &n_measurements_for_size);
+    if(n_measurements_for_size < 0) {
+        fprintf(stderr, "Invalid number of measurement for each size: it must be a positive number");
+        return 1;
+    }
     
     int server_delay;
     printf("Insert the server delay: ");
@@ -93,21 +115,17 @@ int main(int argc, char *argv[]) {
     }
 
     if(mode == RTT) {
-        int sizes[] = {1, 100, 200, 400, 800, 1000};
-        int n_measurements_for_size = 20;
         operation op;
         op.code = RTT;
         op.as_string = "RTT";
         op.measure_unit = "ms";
-        execute_request(op, sizes, sizeof(sizes)/sizeof(int), n_measurements_for_size, server_delay);
+        execute_request(op, sizes, n_sizes, n_measurements_for_size, server_delay);
     } else {
-        int sizes[] = {1000, 2000, 4000, 16000, 32000};
-        int n_measurements_for_size = 20;
         operation op;
         op.code = THROUGHPUT;
         op.as_string = "Throughput";
         op.measure_unit = "kbps";
-        execute_request(op, sizes, sizeof(sizes)/sizeof(int), n_measurements_for_size, server_delay);
+        execute_request(op, sizes, n_sizes, n_measurements_for_size, server_delay);
     }
 
     return 0;
@@ -227,7 +245,7 @@ double get_average_by_operation(int operation_code, long rtts[], int start, int 
     if(operation_code == RTT) {
         return avg_rtt;
     } else if(operation_code == THROUGHPUT) {
-        return (size / avg_rtt) / 1E3;
+        return size / avg_rtt;
     } else {
         fprintf(stderr, "Unsupported operation.");
         exit(EXIT_FAILURE);

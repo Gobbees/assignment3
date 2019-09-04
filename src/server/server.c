@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include "check_phase.h"
-#include "utilities.h"
+#include "../common/utilities.h"
 
 #define MAX_CONNECTIONS 20
 #define MAX_MESSAGE_SIZE 33000

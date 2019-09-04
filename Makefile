@@ -1,27 +1,30 @@
-all: server.exe client.exe
+all: create_folders server.exe client.exe 
 
-server.exe: server.o check_phase.o parse_message.o utilities.o
-	gcc -o server.exe server.o check_phase.o parse_message.o utilities.o
+create_folders: clean
+	mkdir bin; mkdir bin/server/; mkdir bin/client/; mkdir bin/common/
 
-client.exe: client.o utilities.o
-	gcc -o client.exe client.o utilities.o
+server.exe: bin/server/server.o bin/server/check_phase.o bin/server/parse_message.o bin/common/utilities.o
+	gcc -o server.exe bin/server/server.o bin/server/check_phase.o bin/server/parse_message.o bin/common/utilities.o
 
-utilities.o: utilities.c
-	gcc -c utilities.c
+client.exe: bin/client/client.o bin/common/utilities.o
+	gcc -o client.exe bin/client/client.o bin/common/utilities.o
 
-server.o: server.c
-	gcc -c server.c
+bin/common/utilities.o: src/common/utilities.c
+	gcc -c src/common/utilities.c -o bin/common/utilities.o
 
-check_phase.o: check_phase.c check_phase.h
-	gcc -c check_phase.c
+bin/server/server.o: src/server/server.c
+	gcc -c src/server/server.c -o bin/server/server.o
 
-parse_message.o: parse_message.c parse_message.h
-	gcc -c parse_message.c
+bin/server/check_phase.o: src/server/check_phase.c
+	gcc -c src/server/check_phase.c -o bin/server/check_phase.o
 
-client.o: client.c
-	gcc -c client.c
+bin/server/parse_message.o: src/server/parse_message.c
+	gcc -c src/server/parse_message.c -o bin/server/parse_message.o
+
+bin/client/client.o: src/client/client.c
+	gcc -c src/client/client.c -o bin/client/client.o
 
 .PHONY: clean
 
 clean:
-	rm *.o *.exe
+	if [[ -e bin/ ]]; then rm -rf bin/; rm *.exe; fi

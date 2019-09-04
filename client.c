@@ -57,6 +57,13 @@ double get_average_by_operation(int operation_code, long rtts[], int start, int 
  */
 long long get_time_in_milliseconds();
 
+/**
+ * Print on a file named operation.txt the given result. 
+ * If the file does not exists, it's created. If it is exist, the print is appended on the file.
+ * The operation string must be less thant 50 characters.
+ */
+void print_on_file(char * operation, int size, double average);
+
 char *ip_address;
 char *port;
 
@@ -189,6 +196,7 @@ void execute_request(operation operation, int sizes[], int sizes_length, int n_m
         double average =  get_average_by_operation(operation.code, rtts, i * n_measurements_for_size, (i + 1) * n_measurements_for_size, size);
         total_average += average;
         printf("Average %s for message of size %d: %lf\n", operation.as_string, size, average);
+        print_on_file(operation.as_string, size, average);
         //Bye phase
         sprintf(send_buffer, "b");
         send_return_value = send(socket_file_descriptor, send_buffer, max_size, 0);
@@ -244,4 +252,18 @@ long long get_time_in_milliseconds() {
     struct timeval tv;
     gettimeofday(&tv, NULL);
     return (tv.tv_sec * 1000) + (tv.tv_usec / 1000);   
+}
+
+void print_on_file(char * operation, int size, double average){
+    char filename[54];
+    strcpy(filename, operation);
+    strcat(filename, ".txt");
+    FILE * to_print_on = fopen(filename, "a+");
+    if(to_print_on == NULL){
+        fprintf(stderr, "File opening failed");
+        exit(EXIT_FAILURE);
+    }
+    fprintf(to_print_on, "%d %f\n", size, average);
+    fflush(to_print_on); // to make it print each time. Otherwise it will stack them up and print in reverse order
+    fclose(to_print_on);
 }

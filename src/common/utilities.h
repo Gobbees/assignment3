@@ -31,8 +31,3 @@ void check_send(int socket_file_descriptor, char *send_message, ssize_t send_ret
  * Otherwise, it exits returning EXIT_FAILURE.
  */
 void check_recv(int socket_file_descriptor, char *recv_message, ssize_t recv_return_value);
-
-/**
- * TODO
- */
-void log_on_file(int packet_size, int rtt, char path[]);

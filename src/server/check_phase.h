@@ -23,6 +23,8 @@ int is_bye_phase(char *message, int msg_length);
 
 
 /**
- * 
+ * Returns:
+ * -1 if the hello message is unitialized
+ * -0 otherwise
  */
 int is_request_uninitialized(hello_message request);

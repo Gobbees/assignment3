@@ -76,6 +76,25 @@ int main(int argc, char *argv[]) {
     ip_address = argv[1];
     port = argv[2];
 
+    //tries to connect to test that the server is working
+    int socket_file_descriptor = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (socket_file_descriptor == -1) {
+        perror("Socket initialization failed");
+        exit(EXIT_FAILURE);
+    }
+    
+    struct sockaddr_in server_addr;
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_addr.s_addr = inet_addr(ip_address);
+    server_addr.sin_port = htons(atoi(port));
+    
+    int connect_return_value = connect(socket_file_descriptor, (struct sockaddr *) &server_addr, sizeof(server_addr));
+    if (connect_return_value == -1) {
+        perror("connect operation failed");
+        exit(EXIT_FAILURE);
+    }
+    close(socket_file_descriptor);
+        
     int mode;
     printf("Select the operation you want to perform:\n- 1: rtt measurement\n- 2: throughput measurement\n");
     scanf("%d", &mode);
@@ -92,17 +111,23 @@ int main(int argc, char *argv[]) {
         scanf("%d", &new_size);
         if(new_size == -1) {
             break;
-        } else if(new_size < 0) {
-            fprintf(stderr, "Invalid size: it must be a positive number");
-        }
+        } else if(new_size <= 0) {
+            fprintf(stderr, "Invalid size: it must be a positive non-zero number.\n");
+            continue;
+        } 
         sizes[n_sizes++] = new_size;
+    }
+
+    if(n_sizes == 0) {
+        printf("No sizes. Closing\n");
+        exit(EXIT_SUCCESS);
     }
 
     int n_measurements_for_size;
     printf("Insert the number of measurement for each size: ");
     scanf("%d", &n_measurements_for_size);
-    if(n_measurements_for_size < 0) {
-        fprintf(stderr, "Invalid number of measurement for each size: it must be a positive number");
+    if(n_measurements_for_size <= 0) {
+        fprintf(stderr, "Invalid number of measurement for each size: it must be a positive non-zero number.\n");
         return 1;
     }
     
@@ -110,7 +135,7 @@ int main(int argc, char *argv[]) {
     printf("Insert the server delay: ");
     scanf("%d", &server_delay);
     if(server_delay < 0) {
-        fprintf(stderr, "Invalid server delay: it must be a positive number");
+        fprintf(stderr, "Invalid server delay: it must be a positive number.\n");
         return 1;
     }
 

@@ -1,7 +1,8 @@
-#include "parse_message.h"
 #include <stdio.h>
-#include <string.h> //TODO return -1 instead of 1
+#include <string.h>
 #include <stdlib.h>
+#include "parse_message.h"
+#include "utilities.h"
 
 int parse_hello_message(char *buffer, hello_message *message) {
     strtok(buffer, " "); //skips the protocol_phase. Not interesting here.
@@ -30,8 +31,18 @@ int parse_hello_message(char *buffer, hello_message *message) {
     message->n_probes = n_probes;
     message->msg_size = msg_size;
     message->server_delay = server_delay;
-    message->probes_counted = 0;
+    message->next_probe = 1;
     return 0;
+}
+
+hello_message get_uninitialized_hello_message() {
+    hello_message message;
+    strcpy(message.measure_type, "\0");
+    message.msg_size = -1;
+    message.n_probes = -1;
+    message.server_delay = -1;
+    message.next_probe = -1;
+    return message;
 }
 
 int parse_and_check_measurement_message(char *buffer, hello_message request, measurement_message *message) {
@@ -44,8 +55,8 @@ int parse_and_check_measurement_message(char *buffer, hello_message request, mea
     } else if(probe_seq_num > request.n_probes) {
         fprintf(stderr, "Invalid input message: probe_seq_num must be less or equal than n_probes set in hello_message");
         return 1;
-    } else if(probe_seq_num != request.probes_counted + 1) {
-        fprintf(stderr, "Invalid input message: probe_seq_num must be exactly the next probe: expected %d, actual %d", request.probes_counted + 1, probe_seq_num);
+    } else if(probe_seq_num != request.next_probe) {
+        fprintf(stderr, "Invalid input message: probe_seq_num must be exactly the next probe: expected %d, actual %d", request.next_probe, probe_seq_num);
         return 1;
     }
 
@@ -53,16 +64,10 @@ int parse_and_check_measurement_message(char *buffer, hello_message request, mea
     message->probe_seq_num = probe_seq_num;
     if(message->payload == NULL) {
         message->payload = (char *) malloc(request.msg_size);
-        if(message->payload == NULL) {
-            fprintf(stderr, "Malloc returned NULL");
-            return 2;
-        }
+        check_allocation(message->payload);
     } else {
         message->payload = (char *) realloc(message->payload, request.msg_size);
-        if(message->payload == NULL) {
-            fprintf(stderr, "Realloc returned NULL");
-            return 2;
-        }
+        check_allocation(message->payload);
     }
     strcpy(message->payload, payload);
 

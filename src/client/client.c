@@ -88,7 +88,7 @@ int main(int argc, char *argv[]) {
     int n_sizes = 0;
     int new_size = 0;
     while(1) {
-        printf("Add a size to the measurement (-1 to exit size input): ");
+        printf("Add a new size to the measurement (-1 to exit size input)(MAX 32,768): ");
         scanf("%d", &new_size);
         if(new_size == -1) {
             break;

@@ -1,7 +1,6 @@
-#include "check_phase.h"
-
 #include <string.h>
 #include <stdio.h>
+#include "check_phase.h"
 
 int is_hello_phase(char *message, int msg_length) {
     char copy_of_message[msg_length];
@@ -25,8 +24,10 @@ int is_bye_phase(char *message, int msg_length) {
 }
 
 int is_request_uninitialized(hello_message message) {
-    if(message.measure_type[0] == '\0' && message.msg_size == 0 
-        && message.n_probes == 0 && message.server_delay == 0 && message.probes_counted == 0) {
+    hello_message uninitialized_message = get_uninitialized_hello_message();
+    if(strcmp(message.measure_type, uninitialized_message.measure_type) == 0 && message.msg_size == uninitialized_message.msg_size 
+        && message.n_probes == uninitialized_message.n_probes && message.server_delay == uninitialized_message.server_delay 
+        && message.next_probe == uninitialized_message.next_probe) {
         return 1;
     }
     return 0;

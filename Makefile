@@ -1,3 +1,5 @@
+SHELL := /bin/bash
+
 all: create_folders server.exe client.exe 
 
 create_folders: clean

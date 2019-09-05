@@ -74,7 +74,7 @@ int main(int argc, const char * argv[]) {
         } else if(pid == 0) {
             close(socket_file_descriptor);
             manage_request(opened_socket_file_descriptor);
-            exit(0);
+            exit(EXIT_SUCCESS);
         } else {
             close(opened_socket_file_descriptor);
         }
@@ -84,7 +84,9 @@ int main(int argc, const char * argv[]) {
 
 void handle_signal (int sig){
     switch (sig) {
+        pid_t pid;
         case SIGCHLD:
+	        pid=wait(NULL);
             return;
         default : printf ("Signal not known!\n");
             break;
@@ -102,21 +104,28 @@ void manage_request(int socket_file_descriptor) {
     while(1) {
         buffer = memset(buffer, '\0', MAX_MESSAGE_SIZE);
         ssize_t message_length = recv(socket_file_descriptor, buffer, MAX_MESSAGE_SIZE, 0);
+        if(message_length == 0) {
+            printf("Connection closed by peer.\n");
+            exit(EXIT_SUCCESS);
+        }
         check_recv(socket_file_descriptor, buffer, message_length);
         if(is_hello_phase(buffer, message_length)) {
             int parse_hello_message_return_value = parse_hello_message(buffer, &request);
             if(parse_hello_message_return_value == 1) {
                 output_message = "404 ERROR - Invalid Hello message";
-                check_send(socket_file_descriptor, output_message, send(socket_file_descriptor, output_message, strlen(output_message), 0));
+                ssize_t send_return_value = send(socket_file_descriptor, output_message, strlen(output_message), 0);
+                check_send(socket_file_descriptor, output_message, send_return_value);
             } else {
                 output_message = "200 OK - Ready";
-                check_send(socket_file_descriptor, output_message, send(socket_file_descriptor, output_message, 100, 0));
+                ssize_t send_return_value = send(socket_file_descriptor, output_message, strlen(output_message), 0);
+                check_send(socket_file_descriptor, output_message, send_return_value);
             }
         } else if(is_measurement_phase(buffer, message_length)) {
             if(is_request_uninitialized(request)) { 
                 printf("Invalid measurement: request uninitialized.\n"); ff;
                 output_message = "404 ERROR - Invalid Measurement message";
-                check_send(socket_file_descriptor, output_message, send(socket_file_descriptor, output_message, strlen(output_message), 0));
+                ssize_t send_return_value = send(socket_file_descriptor, output_message, strlen(output_message), 0);
+                check_send(socket_file_descriptor, output_message, send_return_value);
                 close(socket_file_descriptor);
                 exit(EXIT_FAILURE);
             }
@@ -124,7 +133,8 @@ void manage_request(int socket_file_descriptor) {
             if(parse_and_check_measurement_message_return_value == 1) {
                 printf("Invalid measurement: invalid request.\n"); ff;
                 output_message = "404 ERROR - Invalid Measurement message";
-                check_send(socket_file_descriptor, output_message, send(socket_file_descriptor, output_message, strlen(output_message), 0));
+                ssize_t send_return_value = send(socket_file_descriptor, output_message, strlen(output_message), 0);
+                check_send(socket_file_descriptor, output_message, send_return_value);
                 close(socket_file_descriptor);
                 exit(EXIT_FAILURE);
             } else {

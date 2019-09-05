@@ -82,12 +82,10 @@ int main(int argc, char *argv[]) {
         perror("Socket initialization failed");
         exit(EXIT_FAILURE);
     }
-    
     struct sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = inet_addr(ip_address);
     server_addr.sin_port = htons(atoi(port));
-    
     int connect_return_value = connect(socket_file_descriptor, (struct sockaddr *) &server_addr, sizeof(server_addr));
     if (connect_return_value == -1) {
         perror("connect operation failed");
@@ -111,10 +109,10 @@ int main(int argc, char *argv[]) {
         scanf("%d", &new_size);
         if(new_size == -1) {
             break;
-        } else if(new_size <= 0) {
-            fprintf(stderr, "Invalid size: it must be a positive non-zero number.\n");
+        } else if(new_size <= 0 || new_size > 32768) {
+            fprintf(stderr, "Invalid size: it must be a positive non-zero number < 32,768.\n");
             continue;
-        } 
+        }
         sizes[n_sizes++] = new_size;
     }
 
